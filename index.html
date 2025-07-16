@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Tarefas</title>
+  <style>
+    :root {
+      --bg-color: #f0f0f0;
+      --text-color: #333;
+      --accent-color: #007bff;
+    }
+    [data-theme="dark"] {
+      --bg-color: #1e1e1e;
+      --text-color: #f9f9f9;
+      --accent-color: #00d1ff;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: var(--accent-color);
+      color: white;
+    }
+    .container {
+      padding: 1rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    input[type="text"] {
+      width: 70%;
+      padding: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-left: 0.5rem;
+      cursor: pointer;
+    }
+    .filters button {
+      margin: 0.5rem 0.5rem 0.5rem 0;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-bottom: 1px solid #ccc;
+    }
+    li.completed span {
+      text-decoration: line-through;
+    }
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lista de Tarefas</h1>
+    <label>
+      🌙
+      <input type="checkbox" id="toggleTheme" />
+    </label>
+  </header>
+  <div class="container">
+    <div class="actions">
+      <input type="text" id="taskInput" placeholder="Digite uma tarefa..." />
+      <button onclick="addTask()">Adicionar</button>
+    </div>
+    <div class="filters">
+      <button onclick="setFilter('all')">Todas</button>
+      <button onclick="setFilter('pending')">Pendentes</button>
+      <button onclick="setFilter('completed')">Concluídas</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+    const toggleTheme = document.getElementById('toggleTheme');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let filter = 'all';
+
+    toggleTheme.addEventListener('change', () => {
+      document.documentElement.setAttribute('data-theme', toggleTheme.checked ? 'dark' : '');
+    });
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (text) {
+        tasks.push({ text, completed: false });
+        taskInput.value = '';
+        saveAndRender();
+      }
+    }
+
+    function toggleComplete(index) {
+      tasks[index].completed = !tasks[index].completed;
+      saveAndRender();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveAndRender();
+    }
+
+    function setFilter(newFilter) {
+      filter = newFilter;
+      renderTasks();
+    }
+
+    function saveAndRender() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        if (
+          filter === 'all' ||
+          (filter === 'pending' && !task.completed) ||
+          (filter === 'completed' && task.completed)
+        ) {
+          const li = document.createElement('li');
+          li.className = task.completed ? 'completed' : '';
+
+          const span = document.createElement('span');
+          const statusIcon = task.completed ? '✅' : '⏳';
+span.textContent = `${statusIcon} ${task.text}`;
+
+          span.onclick = () => toggleComplete(index);
+
+          const btn = document.createElement('button');
+          btn.textContent = '🗑️';
+         
+          btn.onclick = () => deleteTask(index);
+
+          li.append(span, btn);
+          taskList.appendChild(li);
+        }
+      });
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
